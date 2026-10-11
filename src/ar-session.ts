@@ -45,6 +45,7 @@ export class ArSessionController {
       this.preview.detachBubble();
       this.scene.add(this.bubble.group);
       this.preview.renderer.xr.enabled = true;
+      this.preview.renderer.xr.setReferenceSpaceType('local');
       await this.preview.renderer.xr.setSession(session);
       this.referenceSpace = await session.requestReferenceSpace('local');
       const viewerSpace = await session.requestReferenceSpace('viewer');
