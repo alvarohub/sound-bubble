@@ -56,6 +56,22 @@ Start with an invite-only contributor pilot. Public reading is permitted; unrest
 
 Use current compatible package releases and commit the lockfile. Avoid adding a UI framework, custom API server, state-management framework, or PWA service worker unless a concrete requirement justifies it.
 
+## 3.1 Client Platforms And Shared Backend
+
+The Android web client and an eventual iPhone AR client are separate implementations, not ports of one another.
+
+- **Android web client:** TypeScript, Three.js, and WebXR `immersive-ar` with ARCore-compatible Chrome.
+- **iPhone client:** a future native ARKit/RealityKit application or native wrapper. Safari WebXR must not be treated as an equivalent AR implementation or as a target for a direct code port.
+- **Web fallback:** the ordinary browser map, record detail, and 3D preview remain useful wherever immersive AR is unavailable.
+
+The backend is the common layer. It owns authentication, authorization, records, geographic data, messages, media references, and public/owner/moderator visibility rules. Each client must use the same versioned data contracts and must not store its session-local AR transform as a shared-world location.
+
+Rendering and tracking code are client-specific. Shared character metadata and content may be reused, but asset conversion and rendering behavior must be validated independently for Three.js and RealityKit.
+
+### Related Project Boundary
+
+**Reality Field Sensor** is a separate physical-IoT project associated with **CommonsClaw** / **turtleKami**. It may later present an AR “ghost” near local sensor and local-LLM nodes. That future client can consume an agreed backend contract, but it is not part of this MVP and must not couple its device, local-LLM, or spatial behavior to Urban Beautician prematurely.
+
 ## 4. Persistence and placement contract
 
 There are two separate coordinate systems:
