@@ -37,24 +37,34 @@ export class ArSessionController {
   public async start(): Promise<void> {
     if (this.session) return;
     if (await getArAvailability() !== 'available') throw new Error('Immersive AR is not available on this device.');
-    this.preview.stop();
-    this.preview.detachBubble();
-    this.scene.add(this.bubble.group);
-    this.preview.renderer.xr.enabled = true;
-    this.session = await navigator.xr!.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
-    this.session.addEventListener('end', () => void this.finish());
-    this.session.addEventListener('select', () => this.place());
-    await this.preview.renderer.xr.setSession(this.session);
-    this.referenceSpace = await this.session.requestReferenceSpace('local');
-    const viewerSpace = await this.session.requestReferenceSpace('viewer');
-    const requestHitTestSource = this.session.requestHitTestSource;
-    if (!requestHitTestSource) throw new Error('Hit testing is not supported by this AR session.');
-    const hitTestSource = await requestHitTestSource.call(this.session, { space: viewerSpace });
-    if (!hitTestSource) throw new Error('Could not create an AR hit-test source.');
-    this.hitTestSource = hitTestSource;
-    this.startedAt = performance.now();
-    this.preview.renderer.setAnimationLoop((_, frame) => this.render(frame));
-    this.onStatus('Looking for a horizontal floor or tabletop. Tap once the orange ring appears.');
+    let session: XRSession | null = null;
+
+    try {
+      session = await navigator.xr!.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
+      this.preview.stop();
+      this.preview.detachBubble();
+      this.scene.add(this.bubble.group);
+      this.preview.renderer.xr.enabled = true;
+      await this.preview.renderer.xr.setSession(session);
+      this.referenceSpace = await session.requestReferenceSpace('local');
+      const viewerSpace = await session.requestReferenceSpace('viewer');
+      const requestHitTestSource = session.requestHitTestSource;
+      if (!requestHitTestSource) throw new Error('Hit testing is not supported by this AR session.');
+      const hitTestSource = await requestHitTestSource.call(session, { space: viewerSpace });
+      if (!hitTestSource) throw new Error('Could not create an AR hit-test source.');
+
+      this.session = session;
+      this.hitTestSource = hitTestSource;
+      this.session.addEventListener('end', () => void this.finish());
+      this.session.addEventListener('select', () => this.place());
+      this.startedAt = performance.now();
+      this.preview.renderer.setAnimationLoop((_, frame) => this.render(frame));
+      this.onStatus('Looking for a horizontal floor or tabletop. Tap once the orange ring appears.');
+    } catch (error) {
+      this.restorePreview();
+      if (session) await session.end().catch(() => undefined);
+      throw error;
+    }
   }
 
   public async end(): Promise<void> {
@@ -64,9 +74,10 @@ export class ArSessionController {
   private render(frame: XRFrame | undefined): void {
     if (!frame || !this.referenceSpace) return;
     const hit = this.hitTestSource ? frame.getHitTestResults(this.hitTestSource)[0] : undefined;
-    this.hasHit = Boolean(hit);
+    const pose = hit?.getPose(this.referenceSpace);
+    this.hasHit = Boolean(pose);
     this.reticle.visible = this.hasHit;
-    if (hit) this.reticle.matrix.fromArray(hit.getPose(this.referenceSpace)!.transform.matrix);
+    if (pose) this.reticle.matrix.fromArray(pose.transform.matrix);
     this.reticle.matrixAutoUpdate = false;
     if (!this.hasHit && performance.now() - this.startedAt > 6000) {
       this.onStatus('Try a well-lit textured floor or table and move your phone slowly.');
@@ -85,16 +96,20 @@ export class ArSessionController {
   }
 
   private async finish(): Promise<void> {
-    this.preview.renderer.setAnimationLoop(null);
     this.hitTestSource?.cancel();
     this.hitTestSource = null;
     this.referenceSpace = null;
     this.session = null;
+    this.restorePreview();
+    this.onStatus(this.placed ? 'AR session ended. The bubble was not saved.' : 'AR session ended without placing a bubble.');
+    this.onEnded();
+  }
+
+  private restorePreview(): void {
+    this.preview.renderer.setAnimationLoop(null);
     this.preview.renderer.xr.enabled = false;
     this.scene.remove(this.bubble.group);
     this.preview.attachBubble();
     this.preview.start();
-    this.onStatus(this.placed ? 'AR session ended. The bubble was not saved.' : 'AR session ended without placing a bubble.');
-    this.onEnded();
   }
 }
