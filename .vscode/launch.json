@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Sound Bubble (Vite)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "sound-bubble-frontend dev"
+    }
+  ]
+}

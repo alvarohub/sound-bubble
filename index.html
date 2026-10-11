@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A session-local procedural sound bubble for WebXR AR." />
+    <title>Sound Bubble</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Sound Bubble home"><span>SB</span> Sound Bubble</a>
+        <span class="pill"><i data-lucide="sparkles"></i> D1 / D2 / D3</span>
+      </header>
+
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-art" aria-hidden="true"></div>
+        <p class="eyebrow">Bubble Studio</p>
+        <h1 id="page-title">Make a small bubble listen to the room.</h1>
+        <p>Preview a procedural bubble, then place one on a detected floor or tabletop in a compatible Android Chrome AR session. Nothing is saved or uploaded.</p>
+        <div class="action-row">
+          <button id="preview-button"><i data-lucide="play"></i> Try 3D preview</button>
+          <button id="ar-button" class="secondary"><i data-lucide="scan-line"></i> Start AR</button>
+        </div>
+      </section>
+
+      <section class="studio" aria-label="Bubble preview and controls">
+        <article class="stage-card">
+          <header><h2><i data-lucide="orbit"></i> Bubble preview</h2><span>15 cm resting diameter</span></header>
+          <div id="render-host" class="render-host" role="img" aria-label="Ordinary 3D preview of an animated sound bubble"></div>
+          <p id="mode-label" class="stage-caption">3D preview - not AR</p>
+        </article>
+
+        <aside class="controls" aria-label="Sound Bubble controls">
+          <article>
+            <h3><i data-lucide="mic"></i> Sound input</h3>
+            <p id="mic-status">Microphone is optional. The preview is using its idle pulse.</p>
+            <button id="mic-button" class="secondary"><i data-lucide="mic"></i> Enable microphone</button>
+            <label for="simulation">Simulate sound <output id="simulation-output">0%</output></label>
+            <input id="simulation" type="range" min="0" max="100" value="0" />
+            <meter id="level-meter" min="0" max="1" value="0">0%</meter>
+          </article>
+
+          <article>
+            <h3><i data-lucide="scan-search"></i> AR targeting</h3>
+            <p id="ar-status">Checking whether immersive AR is available on this device.</p>
+            <p class="muted">Move your phone to find a surface. Tap to place. Make a sound.</p>
+          </article>
+
+          <article class="privacy">
+            <i data-lucide="shield-check"></i>
+            <p>Sound is processed on your device. No audio is recorded or sent anywhere.</p>
+          </article>
+        </aside>
+      </section>
+
+      <section id="guidance" class="guidance" aria-live="polite">
+        <i data-lucide="info"></i>
+        <p>AR placement is session-local. A valid surface hit is required before a bubble can be placed.</p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
